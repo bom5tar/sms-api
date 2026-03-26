@@ -1,21 +1,22 @@
-from fastapi import FastAPI, Request
-
-app = FastAPI()
-
-
-@app.get("/")
-async def home():
-    return {"message": "Server is running"}
-
-
 @app.post("/api/sms")
-async def receive_sms(request: Request):
-    body = await request.body()
-    text = body.decode("utf-8").strip()
+def receive_sms(payload: IncomingSMS):
+    message_data = {
+        "sender": payload.sender,
+        "message_text": payload.message_text,
+        "received_at": payload.received_at,
+        "user_id": payload.user_id,
+    }
 
-    print("NEW MESSAGE:", text)
+    messages_store.append(message_data)
+
+    print("NEW MESSAGE RECEIVED")
+    print("sender:", repr(payload.sender))
+    print("message_text:", repr(payload.message_text))
+    print("received_at:", repr(payload.received_at))
+    print("user_id:", repr(payload.user_id))
+    print("-" * 40)
 
     return {
-        "status": "ok",
-        "message_received": text
+        "status": "saved",
+        "message": message_data
     }
