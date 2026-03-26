@@ -1,16 +1,6 @@
-from typing import Optional
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI, Request
 
 app = FastAPI(title="SMS Viewer API")
-
-
-class IncomingSMS(BaseModel):
-    sender: Optional[str] = None
-    message_text: str
-    received_at: Optional[str] = None
-    user_id: Optional[str] = None
-
 
 messages_store = []
 
@@ -21,31 +11,27 @@ def home():
 
 
 @app.post("/api/sms")
-def receive_sms(payload: IncomingSMS):
-    message_data = {
-        "sender": payload.sender,
-        "message_text": payload.message_text,
-        "received_at": payload.received_at,
-        "user_id": payload.user_id,
-    }
-
-    messages_store.append(message_data)
+async def receive_sms(request: Request):
+    data = await request.json()
 
     print("NEW MESSAGE RECEIVED")
-    print("sender:", repr(payload.sender))
-    print("message_text:", repr(payload.message_text))
-    print("received_at:", repr(payload.received_at))
-    print("user_id:", repr(payload.user_id))
+    print("RAW DATA:", repr(data))
     print("-" * 40)
+
+    messages_store.append(data)
 
     return {
         "status": "saved",
-        "message": message_data
+        "data": data
     }
 
 
 @app.get("/messages")
 def get_messages():
+    return {
+        "count": len(messages_store),
+        "messages": messages_store
+    }
     return {
         "count": len(messages_store),
         "messages": messages_store
